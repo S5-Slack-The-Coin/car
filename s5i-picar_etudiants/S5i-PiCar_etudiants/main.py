@@ -5,12 +5,14 @@ import asyncio
 import threading
 import time
 import packet
+import control
 
 def main_thread(server):
+    ctrl = control.Control()
     while True:
         time.sleep(1)
-        distance = 500.3
-        suiveur = [True, False,False,True, True]
+        distance = ctrl.get_distance()
+        suiveur = ctrl.get_line_position()
         # Read data from captors here
         sender = packet.data_to_packet(distance, suiveur)
         # Send data to godot
@@ -20,6 +22,8 @@ def main_thread(server):
         if receiver != None:
             # W should parse the data using the packaet methods and update the captors
             angle, vitesse = packet.packet_to_data(receiver)
+            ctrl.set_angle(angle)
+            ctrl.set_speed(vitesse)
             print(f"Angle : {angle}, vitesse : {vitesse}")
 
 def main():
