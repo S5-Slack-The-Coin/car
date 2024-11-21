@@ -9,10 +9,9 @@ class SingleClientWebSocketServer:
         self.connected_client = None
         self.client_lock = asyncio.Lock()
         self.last_received_packet = None
-        self.send_packet_queue = asyncio.Queue()
         self.sender_event_loop = None
 
-    async def handler(self, websocket):
+    async def handler(self, websocket, path):
         async with self.client_lock:
             if self.connected_client is not None:
                 # Close the previous client connection
@@ -49,6 +48,7 @@ class SingleClientWebSocketServer:
         thread.start()
 
     async def _send_loop(self):
+        self.send_packet_queue = asyncio.Queue()
         while True:
             packet = await self.send_packet_queue.get()
             print(f"Sending packet {packet}")
