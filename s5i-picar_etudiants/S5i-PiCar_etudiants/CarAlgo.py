@@ -6,16 +6,18 @@ class MainState(Enum):
     START = 1
     NORMAL = 2
     BACKWARD = 3
-    AVOIDANCE = 4
-    RETAKE = 5
-    STOP = 6
+    AVOIDANCE1 = 4
+    AVOIDANCE2 = 5
+    AVOIDANCE3 = 6
+    RETAKE = 7
+    STOP = 8
+
 
 class Movement():
     def __init__(self, distance: float, target_speed: float):
         self.distance = distance
         self.targetSpeed = target_speed
         self.distanceTravelled = 0
-        self.currentStateDone = False
 
 
 class CarAlgo():
@@ -24,7 +26,7 @@ class CarAlgo():
         self.MAX_ACCELERATION = 120
         self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
         self.MAX_SPEED = self.SPEED
-        self.targetSpeed = 0
+        self.SAFETY_FACTOR = 10
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -33,6 +35,9 @@ class CarAlgo():
         self.speed: float = 0.0  # mm/s
         # MEF
         self.state = MainState.START
+        self.currentStateDone = False
+
+        self.currentMovement = Movement(0, 0)
 
     def mainMETick(self, delta):
         self._stateCalculator()
@@ -44,35 +49,52 @@ class CarAlgo():
         elif self.state == MainState.NORMAL:
             # if self.suiveurLigne == [False, False, False, False, False]:
             #     self._changeState(MainState.RETAKE)
-            if self.suiveurLigne == [True, True, True, True, True] or self.suiveurLigne == [False, True, True, True, True] or self.suiveurLigne == [True, True, True, True, False]:
+            if self.suiveurLigne == [True, True, True, True, True] or self.suiveurLigne == [False, True, True, True,
+                                                                                            True] or self.suiveurLigne == [
+                True, True, True, True, False]:
                 self._changeState(MainState.STOP)
             elif 70 <= self.distance <= 125 and self.speed <= 35:
                 self._changeState(MainState.BACKWARD)
         elif self.state == MainState.BACKWARD:
-            if  self.currentStateDone:
-                self._changeState(MainState.AVOIDANCE)
-        elif self.state == MainState.AVOIDANCE:
             if self.currentStateDone:
-                self._changeState(MainState.RETAKE)
-        elif self.state == MainState.RETAKE:
+                self._changeState(MainState.AVOIDANCE1)
+        elif self.state == MainState.AVOIDANCE1:
+            if self.currentStateDone:
+                self._changeState(MainState.AVOIDANCE2)
+        elif self.state == MainState.AVOIDANCE2:
+            if self.currentStateDone:
+                self._changeState(MainState.AVOIDANCE3)
+        elif self.state == MainState.AVOIDANCE3:
             if self.currentStateDone:
                 self._changeState(MainState.NORMAL)
         elif self.state == MainState.STOP:
             pass
 
     def _changeState(self, state):
+        if state == MainState.BACKWARD:
+            self.currentMovement = Movement(220, -self.MAX_SPEED)
+        elif state == MainState.AVOIDANCE1:
+            self.currentMovement = Movement(1000, self.MAX_SPEED)
+        elif state == MainState.AVOIDANCE2:
+            self.currentMovement = Movement(1000, self.MAX_SPEED)
+        elif state == MainState.AVOIDANCE3:
+            self.currentMovement = Movement(1000, self.MAX_SPEED)
         self.currentStateDone = False
         self.state = state
 
-    def _stateCaller(self,delta):
+    def _stateCaller(self, delta):
         if self.state == MainState.START:
             pass
         elif self.state == MainState.NORMAL:
             self._normalState(delta)
         elif self.state == MainState.BACKWARD:
-            self._backwardState()
-        elif self.state == MainState.AVOIDANCE:
-            self._avoidanceState()
+            self._backwardState(delta)
+        elif self.state == MainState.AVOIDANCE1:
+            self._avoidance1State(delta)
+        elif self.state == MainState.AVOIDANCE1:
+            self._avoidance2State(delta)
+        elif self.state == MainState.AVOIDANCE1:
+            self._avoidance3State(delta)
         elif self.state == MainState.RETAKE:
             self._retakeState()
         elif self.state == MainState.STOP:
@@ -88,12 +110,37 @@ class CarAlgo():
             print("caluclated speed", wanted_speed)
             self.speed = self._acceleration(delta, wanted_speed)
 
-    def _backwardState(self):
-        pass
-    def _avoidanceState(self):
-        pass
-    def _retakeState(self):
-        pass
+    def _backwardState(self, delta):
+        self._movementDone(delta)
+
+    def _avoidance1State(self, delta):
+        self.angle = 65
+        self._movementDone(delta)
+
+    def _avoidance2State(self, delta):
+        self.angle = 90
+        self._movementDone(delta)
+
+    def _avoidance3State(self, delta):
+        self.angle = 145
+        self._movementDone(delta)
+
+    def _moveDistance(self, delta: float):
+        self.currentMovement.distanceTravelled += abs(self.speed) * delta
+        remaining_distance = self.currentMovement.distance - self.currentMovement.distanceTravelled
+        distance_v0 = self.speed ** 2 / (2 * self.MAX_ACCELERATION)
+
+        if distance_v0 >= remaining_distance:
+            self.currentMovement.targetSpeed = 0.0
+        return self._acceleration(delta, self.currentMovement.targetSpeed)
+
+    def _movementDone(self, delta):
+        self.speed = self._moveDistance(delta)
+        if self.currentMovement.distanceTravelled >= self.currentMovement.distance \
+                or (
+                self.speed == 0 and self.currentMovement.distanceTravelled >= self.currentMovement.distance - self.SAFETY_FACTOR):
+            self.currentStateDone = True
+
     def _stopState(self, delta):
         self.speed = self._acceleration(delta, 0.0)
 
@@ -136,7 +183,7 @@ class CarAlgo():
         return self.angle
 
     def _calculateColisionSpeed(self, distance: float):
-        return self.MAX_SPEED/200*distance + 30 - 0.5 * self.MAX_SPEED
+        return self.MAX_SPEED / 200 * distance + 30 - 0.5 * self.MAX_SPEED
 
     def setDistance(self, dist):
         self.distance = dist
