@@ -92,11 +92,11 @@ class CarAlgo():
         if state == MainState.BACKWARD:
             self.currentMovement = Movement(220, -self.MAX_SPEED, True)
         elif state == MainState.AVOIDANCE1:
-            self.currentMovement = Movement(220, self.MAX_SPEED)
+            self.currentMovement = Movement(150, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE2:
-            self.currentMovement = Movement(180, self.MAX_SPEED)
+            self.currentMovement = Movement(260, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE3:
-            self.currentMovement = Movement(300, self.MAX_SPEED)
+            self.currentMovement = Movement(200, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE4:
             self.currentMovement = Movement(200, self.MAX_SPEED)
         elif state == MainState.RETAKE:
@@ -143,10 +143,11 @@ class CarAlgo():
             self.speed = self._acceleration(delta, wanted_speed)
 
     def _backwardState(self, delta):
+        self.angle = 90
         self._movementDone(delta)
 
     def _avoidance1State(self, delta):
-        self.angle = 65
+        self.angle = 55
         self._movementDone(delta)
 
     def _avoidance2State(self, delta):
@@ -208,7 +209,7 @@ class CarAlgo():
     def _calculateAngle(self):
         if self.suiveurLigne == [True, False, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 45
+            return 50
         elif self.suiveurLigne == [True, True, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
             return 56.25
@@ -231,7 +232,7 @@ class CarAlgo():
             return 123.75
         elif self.suiveurLigne == [False, False, False, False, True]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 135
+            return 130
         elif self.suiveurLigne == [False, False, False, False, False]:
             self.lastTurnSide = TurnSide.RIGHT
             return 0

@@ -22,7 +22,7 @@ class SingleClientWebSocketServer:
         # Main communication loop with the client
         try:
             async for message in websocket:
-                print(f"Received message of size: {len(message)}")
+                #print(f"Received message of size: {len(message)}")
                 self.last_received_packet = message
         except websockets.exceptions.ConnectionClosedError:
             print("Client disconnected.")
@@ -51,14 +51,14 @@ class SingleClientWebSocketServer:
         self.send_packet_queue = asyncio.Queue()
         while True:
             packet = await self.send_packet_queue.get()
-            print(f"Sending packet {packet}")
+            #print(f"Sending packet {packet}")
             async with self.client_lock:
                 if self.connected_client is not None:
                     try:
                         await self.connected_client.send(packet)
-                        print(f"Sent packet: {packet}")
+                        #print(f"Sent packet: {packet}")
                     except websockets.exceptions.ConnectionClosedError:
-                        print("Error: Client disconnected during send.")
+                        #print("Error: Client disconnected during send.")
                         self.connected_client = None
             self.send_packet_queue.task_done()
         print("Exited send_packet_queue")
@@ -69,8 +69,8 @@ class SingleClientWebSocketServer:
         Can be called from another thread.
         """
         asyncio.run_coroutine_threadsafe(self.send_packet_queue.put(packet), self.sender_event_loop)
-        print(f"Queue size: {self.send_packet_queue.qsize()}")  # Log queue size
-        print(f"Queued packet for sending: {packet}")
+        #print(f"Queue size: {self.send_packet_queue.qsize()}")  # Log queue size
+        #print(f"Queued packet for sending: {packet}")
 
     def get_last_received_packet(self):
         """

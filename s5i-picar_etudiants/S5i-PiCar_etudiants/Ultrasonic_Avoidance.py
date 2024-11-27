@@ -21,8 +21,7 @@ class Ultrasonic_Avoidance(object):
 		GPIO.setmode(GPIO.BCM)
 
 	def distance(self):
-	# 	Todo
-		pass
+            return 1
 
 def test():
 	UA = Ultrasonic_Avoidance(17)
