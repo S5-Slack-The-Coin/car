@@ -23,21 +23,18 @@ def main():
         # Obtenir les valeurs des capteurs
         distance = ctrl.get_distance()
         suiveur = ctrl.get_line_position()
-
-        # distance = 400
-        # suiveur = [False, False, True, False, False]
-
         # Calculer les nouveaux controles
         current_time = time.time()
         delta_time = current_time - last_time # TODO transformer en seconds
         last_time = current_time
+        print(delta_time)
 
         decision.setDistance(distance)
         decision.setSuiveurLigne(suiveur)
         decision.mainMETick(delta_time)
 
-        print("MainSate: ", decision.state)
-        print("Disatnce: ", distance)
+        #print("MainSate: ", decision.state)
+        #print("Disatnce: ", distance)
         # print("AvoidanceState: ", decision.evitementMEState)
 
 

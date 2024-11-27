@@ -115,7 +115,7 @@ class CarAlgo():
             self.speed = self._acceleration(delta, self.MAX_SPEED)
         else:
             wanted_speed = self._calculateColisionSpeed(self.distance)
-            print("caluclated speed", wanted_speed)
+            #print("caluclated speed", wanted_speed)
             self.speed = self._acceleration(delta, wanted_speed)
 
     def _backwardState(self, delta):
