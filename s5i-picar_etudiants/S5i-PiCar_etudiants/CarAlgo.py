@@ -90,13 +90,13 @@ class CarAlgo():
             self.mouvementQueued = True
 
         if len(self.movementQueue) == 1:
-            if self.movementQueue[0].distance_travelled <= 170:
+            if self.movementQueue[0].distanceTravelled <= 170:
                 cmd_angle = 67.5
-            elif self.movementQueue[0].distance_travelled <= 400:
+            elif self.movementQueue[0].distanceTravelled <= 400:
                 cmd_angle = 90
-            elif self.movementQueue[0].distance_travelled <= 580:
+            elif self.movementQueue[0].distanceTravelled <= 580:
                 cmd_angle = 135
-            elif self.movementQueue[0].distance_travelled <= 1000:
+            elif self.movementQueue[0].distanceTravelled <= 1000:
                 cmd_angle = 112.5
                 if self.suiveurLigne[1] == True or \
                         self.suiveurLigne[2] == True or \
@@ -216,13 +216,13 @@ class CarAlgo():
 
     def _moveDistance(self ,delta: float):
         current_movement = self.movementQueue[0]
-        if current_movement.distance_travelled >= current_movement.distance \
+        if current_movement.distanceTravelled >= current_movement.distance \
                 or (self.cmdSpeed == 0 and current_movement.distanceTravelled >= current_movement.distance - self.safetyFactor):  # to prevent glitch
             self.movementQueue.pop(0)
 
         if len(self.movementQueue) >= 1:
             current_movement = self.movementQueue[0]
-            current_movement.distance_travelled += abs(self.cmdSpeed) * delta
+            current_movement.distanceTravelled += abs(self.cmdSpeed) * delta
             remaining_distance = current_movement.distance - current_movement.distanceTravelled
             distance_v0 = self.cmdSpeed ** 2 / (2 * self.MAX_ACCELERATION)
 
