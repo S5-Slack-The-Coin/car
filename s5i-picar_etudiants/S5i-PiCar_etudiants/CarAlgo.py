@@ -1,5 +1,6 @@
 import math
 from enum import Enum
+from xmlrpc.client import boolean
 
 
 class MainState(Enum):
@@ -9,15 +10,16 @@ class MainState(Enum):
     AVOIDANCE1 = 4
     AVOIDANCE2 = 5
     AVOIDANCE3 = 6
-    RETAKE = 7
+    AVOIDANCE4 = 7
     STOP = 8
 
 
 class Movement():
-    def __init__(self, distance: float, target_speed: float):
+    def __init__(self, distance: float, target_speed: float, stop  = False):
         self.distance = distance
         self.targetSpeed = target_speed
         self.distanceTravelled = 0
+        self.stop = stop
 
 
 class CarAlgo():
@@ -66,19 +68,25 @@ class CarAlgo():
                 self._changeState(MainState.AVOIDANCE3)
         elif self.state == MainState.AVOIDANCE3:
             if self.currentStateDone:
-                self._changeState(MainState.NORMAL)
+                self._changeState(MainState.AVOIDANCE4)
+        elif self.state == MainState.AVOIDANCE4:
+                if self.currentStateDone:
+                    self._changeState(MainState.NORMAL)
         elif self.state == MainState.STOP:
             pass
 
     def _changeState(self, state):
         if state == MainState.BACKWARD:
-            self.currentMovement = Movement(220, -self.MAX_SPEED)
+            self.currentMovement = Movement(220, -self.MAX_SPEED, True)
         elif state == MainState.AVOIDANCE1:
-            self.currentMovement = Movement(1000, self.MAX_SPEED)
+            self.currentMovement = Movement(220, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE2:
-            self.currentMovement = Movement(1000, self.MAX_SPEED)
+            self.currentMovement = Movement(180, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE3:
-            self.currentMovement = Movement(1000, self.MAX_SPEED)
+            self.currentMovement = Movement(300, self.MAX_SPEED)
+        elif state == MainState.AVOIDANCE4:
+            self.currentMovement = Movement(200, self.MAX_SPEED)
+
         self.currentStateDone = False
         self.state = state
 
@@ -91,12 +99,12 @@ class CarAlgo():
             self._backwardState(delta)
         elif self.state == MainState.AVOIDANCE1:
             self._avoidance1State(delta)
-        elif self.state == MainState.AVOIDANCE1:
+        elif self.state == MainState.AVOIDANCE2:
             self._avoidance2State(delta)
-        elif self.state == MainState.AVOIDANCE1:
+        elif self.state == MainState.AVOIDANCE3:
             self._avoidance3State(delta)
-        elif self.state == MainState.RETAKE:
-            self._retakeState()
+        elif self.state == MainState.AVOIDANCE4:
+            self._avoidance4State(delta)
         elif self.state == MainState.STOP:
             self._stopState(delta)
 
@@ -107,7 +115,7 @@ class CarAlgo():
             self.speed = self._acceleration(delta, self.MAX_SPEED)
         else:
             wanted_speed = self._calculateColisionSpeed(self.distance)
-            print("caluclated speed", wanted_speed)
+            #print("caluclated speed", wanted_speed)
             self.speed = self._acceleration(delta, wanted_speed)
 
     def _backwardState(self, delta):
@@ -122,15 +130,20 @@ class CarAlgo():
         self._movementDone(delta)
 
     def _avoidance3State(self, delta):
-        self.angle = 145
+        self.angle = 135
         self._movementDone(delta)
+
+    def _avoidance4State(self, delta):
+        self.angle = 90
+        # Condition de fin
+        self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
 
     def _moveDistance(self, delta: float):
         self.currentMovement.distanceTravelled += abs(self.speed) * delta
         remaining_distance = self.currentMovement.distance - self.currentMovement.distanceTravelled
         distance_v0 = self.speed ** 2 / (2 * self.MAX_ACCELERATION)
 
-        if distance_v0 >= remaining_distance:
+        if distance_v0 >= remaining_distance and self.currentMovement.stop:
             self.currentMovement.targetSpeed = 0.0
         return self._acceleration(delta, self.currentMovement.targetSpeed)
 
