@@ -29,14 +29,14 @@ def main():
         current_time = time.time()
         delta_time = current_time - last_time
         last_time = current_time
-        print(delta_time)
+        #print(delta_time)
 
         decision.setDistance(distance)
         decision.setSuiveurLigne(suiveur)
         decision.mainMETick(delta_time)
 
         print("MainSate: ", decision.state)
-        print("Distance: ", distance)
+        #print("Distance: ", distance)
         # print("AvoidanceState: ", decision.evitementMEState)
 
         speed = decision.getSpeedDecision()

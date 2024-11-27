@@ -24,7 +24,7 @@ class Control():
         self.buffer = [0]*self.buffer_size
         self.buffer_index = 0
 
-        self.lf = Line_Follower.Line_Follower(references=[180]*5)
+        self.lf = Line_Follower.Line_Follower(references=[25]*5)
 
     
     def get_distance(self):
@@ -35,6 +35,11 @@ class Control():
         else: self.buffer_index = 0
         avg = sum(self.buffer)/self.buffer_size
         return avg
+    
+    def print_line_follower(self):
+        print(self.lf.read_analog())
+        print(self.lf.read_digital())
+        time.sleep(0.2)
     
     def get_line_position(self):
         return self.lf.read_digital()
@@ -120,8 +125,8 @@ class Control():
 if __name__ == "__main__":
     ctrl = Control()
     angle_test = False
-    ctrl.backward_30()
-    while False:
+    #ctrl.backward_30()
+    while True:
         print(ctrl.get_line_position())
         time.sleep(0.3)
 
