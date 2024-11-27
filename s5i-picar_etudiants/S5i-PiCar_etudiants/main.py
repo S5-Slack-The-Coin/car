@@ -4,11 +4,6 @@ import time
 import packet
 import control
 import CarAlgo
-from simple_pid import PID
-
-steering_kp = 3.5
-steering_ki = 14
-steering_kd = 0.035
 
 
 def main():
@@ -17,12 +12,6 @@ def main():
     decision = CarAlgo.CarAlgo()
     last_time = time.time()
     total_time = 0
-
-    #steering pid setup
-    current_angle = 90 #starting steering
-    steering_pid = PID(steering_kp, steering_ki, steering_kd, setpoint=current_angle)
-    steering_pid.output_limits = (45, 135)
-    steering_pid.sample_time = 0.02
 
     while total_time < 2:
         current_time = time.time()
@@ -51,15 +40,11 @@ def main():
         # print("AvoidanceState: ", decision.evitementMEState)
 
         speed = decision.getSpeedDecision()
-        steering_pid.setpoint = decision.getSteeringDecision()
-        current_angle = steering_pid(current_angle)
+        angle = decision.getSteeringDecision()
 
         # Appliquer les nouveaux controles
         ctrl.set_speed(speed)
-        ctrl.set_angle(current_angle)
-
-        looptime = time.time() - current_time
-        print("looptime: "+str(looptime))
+        ctrl.set_angle(angle)
 
 
 
