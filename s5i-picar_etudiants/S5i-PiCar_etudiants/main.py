@@ -22,6 +22,7 @@ def main():
     current_angle = 90 #starting steering
     steering_pid = PID(steering_kp, steering_ki, steering_kd, setpoint=current_angle)
     steering_pid.output_limits = (45, 135)
+    steering_pid.sample_time = 0.02
 
     while total_time < 2:
         current_time = time.time()
