@@ -12,7 +12,11 @@ class MainState(Enum):
     AVOIDANCE3 = 6
     AVOIDANCE4 = 7
     STOP = 8
+    RETAKE = 9
 
+class TurnSide(Enum):
+    RIGHT = 1
+    LEFT = 2
 
 class Movement():
     def __init__(self, distance: float, target_speed: float, stop  = False):
@@ -29,6 +33,7 @@ class CarAlgo():
         self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
         self.MAX_SPEED = self.SPEED
         self.SAFETY_FACTOR = 10
+        self.RETAKE_TRESHOLD = 20
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -38,7 +43,9 @@ class CarAlgo():
         # MEF
         self.state = MainState.START
         self.currentStateDone = False
-
+        # Retake system
+        self.retakeCounter = 0
+        self.lastTurnSide = TurnSide.RIGHT
         self.currentMovement = Movement(0, 0)
 
     def mainMETick(self, delta):
@@ -49,29 +56,35 @@ class CarAlgo():
         if self.state == MainState.START:
             self.state = MainState.NORMAL
         elif self.state == MainState.NORMAL:
-            # if self.suiveurLigne == [False, False, False, False, False]:
-            #     self._changeState(MainState.RETAKE)
-            if self.suiveurLigne == [True, True, True, True, True] or self.suiveurLigne == [False, True, True, True,
+            if self.retakeCounter >= self.RETAKE_TRESHOLD:
+                 self._changeState(MainState.RETAKE)
+            elif self.suiveurLigne == [True, True, True, True, True] or self.suiveurLigne == [False, True, True, True,
                                                                                             True] or self.suiveurLigne == [
                 True, True, True, True, False]:
                 self._changeState(MainState.STOP)
             elif 70 <= self.distance <= 125 and self.speed <= 35:
                 self._changeState(MainState.BACKWARD)
+
         elif self.state == MainState.BACKWARD:
             if self.currentStateDone:
                 self._changeState(MainState.AVOIDANCE1)
+
         elif self.state == MainState.AVOIDANCE1:
             if self.currentStateDone:
                 self._changeState(MainState.AVOIDANCE2)
+
         elif self.state == MainState.AVOIDANCE2:
             if self.currentStateDone:
                 self._changeState(MainState.AVOIDANCE3)
+
         elif self.state == MainState.AVOIDANCE3:
             if self.currentStateDone:
                 self._changeState(MainState.AVOIDANCE4)
+
         elif self.state == MainState.AVOIDANCE4:
                 if self.currentStateDone:
                     self._changeState(MainState.NORMAL)
+
         elif self.state == MainState.STOP:
             pass
 
@@ -86,6 +99,8 @@ class CarAlgo():
             self.currentMovement = Movement(300, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE4:
             self.currentMovement = Movement(200, self.MAX_SPEED)
+        elif state == MainState.RETAKE:
+            self.currentMovement = Movement(220, -self.MAX_SPEED, True)
 
         self.currentStateDone = False
         self.state = state
@@ -107,9 +122,18 @@ class CarAlgo():
             self._avoidance4State(delta)
         elif self.state == MainState.STOP:
             self._stopState(delta)
+        elif self.state == MainState.RETAKE:
+            self._retake(delta)
 
     def _normalState(self, delta):
         self.angle = self._calculateAngle()
+
+        # Count de tick a aucune ligne
+        if self.suiveurLigne == [False, False, False, False, False]:
+            self.retakeCounter += 1
+        else:
+            self.retakeCounter = 0
+        # calcul de la vitesse
         wanted_spped = 0
         if self.distance > 300:
             self.speed = self._acceleration(delta, self.MAX_SPEED)
@@ -135,7 +159,16 @@ class CarAlgo():
 
     def _avoidance4State(self, delta):
         self.angle = 90
+        self._movementDone(delta)
         # Condition de fin
+        self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
+
+    def _retake(self, delta):
+        if self.lastTurnSide == TurnSide.RIGHT:
+            self.angle = 135
+        else:
+            self.angle = 65
+        self._movementDone(delta)
         self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
 
     def _moveDistance(self, delta: float):
@@ -174,24 +207,33 @@ class CarAlgo():
 
     def _calculateAngle(self):
         if self.suiveurLigne == [True, False, False, False, False]:
+            self.lastTurnSide = TurnSide.LEFT
             return 45
         elif self.suiveurLigne == [True, True, False, False, False]:
+            self.lastTurnSide = TurnSide.LEFT
             return 56.25
         elif self.suiveurLigne == [False, True, False, False, False]:
+            self.lastTurnSide = TurnSide.LEFT
             return 67.5
         elif self.suiveurLigne == [False, True, True, False, False]:
+            self.lastTurnSide = TurnSide.LEFT
             return 78.75
         elif self.suiveurLigne == [False, False, True, False, False]:
             return 90
         elif self.suiveurLigne == [False, False, True, True, False]:
+            self.lastTurnSide = TurnSide.RIGHT
             return 101.25
         elif self.suiveurLigne == [False, False, False, True, False]:
+            self.lastTurnSide = TurnSide.RIGHT
             return 112.5
         elif self.suiveurLigne == [False, False, False, True, True]:
+            self.lastTurnSide = TurnSide.RIGHT
             return 123.75
         elif self.suiveurLigne == [False, False, False, False, True]:
+            self.lastTurnSide = TurnSide.RIGHT
             return 135
         elif self.suiveurLigne == [False, False, False, False, False]:
+            self.lastTurnSide = TurnSide.RIGHT
             return 0
         return self.angle
 
