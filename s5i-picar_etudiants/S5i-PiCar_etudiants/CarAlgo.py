@@ -84,9 +84,12 @@ class CarAlgo():
         elif self.state == MainState.AVOIDANCE4:
                 if self.currentStateDone:
                     self._changeState(MainState.NORMAL)
-
         elif self.state == MainState.STOP:
             pass
+        elif self.state == MainState.RETAKE:
+            if self.currentStateDone:
+                self._changeState(MainState.NORMAL)
+
 
     def _changeState(self, state):
         if state == MainState.BACKWARD:
@@ -157,6 +160,7 @@ class CarAlgo():
     def _avoidance3State(self, delta):
         self.angle = 135
         self._movementDone(delta)
+        self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
 
     def _avoidance4State(self, delta):
         self.angle = 90
