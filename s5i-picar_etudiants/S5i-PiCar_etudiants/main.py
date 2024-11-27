@@ -6,10 +6,19 @@ import control
 import CarAlgo
 
 def main():
-    #ctrl = control.Control() # Classe de controle pour le hardware du picar
+    ctrl = control.Control() # Classe de controle pour le hardware du picar
     # Classe de controle pour la prise de decision
     decision = CarAlgo.CarAlgo()
     last_time = time.time()
+    total_time = 0
+    while total_time < 2:
+        current_time = time.time()
+        delta_time = current_time - last_time # TODO transformer en seconds
+        last_time = current_time
+        total_time +=delta_time
+        time.sleep(0.58)
+        ctrl.get_distance()
+
     while True:
         # Obtenir les valeurs des capteurs
         distance = ctrl.get_distance()
@@ -25,8 +34,12 @@ def main():
 
         decision.setDistance(distance)
         decision.setSuiveurLigne(suiveur)
+        decision.mainMETick(delta_time)
 
-        decision.mainMETick(delta_time) # T
+        print("MainSate: ", decision.state)
+        print("Disatnce: ", distance)
+        # print("AvoidanceState: ", decision.evitementMEState)
+
 
         speed = decision.getSpeedDecision()
         angle = decision.getSteeringDecision()
