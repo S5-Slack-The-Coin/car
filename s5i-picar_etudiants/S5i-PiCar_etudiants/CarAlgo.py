@@ -6,10 +6,6 @@ class MainState(Enum):
     RETAKE_LINE = 3
     STOP = 4
 
-class AvoidanceState(Enum):
-    RECULON_VIRAGE = 1
-    AVANCEMENT_2VIRAGE = 2
-
 class Movement():
     def __init__(self ,distance: float, target_speed: float):
         self.distance = distance
@@ -39,7 +35,6 @@ class CarAlgo():
         self.mainMEState = MainState.NORMAL
 
         # State system for avoidance algo
-        self.evitementMEState = 1
         self.mouvementQueued: bool = False
 
         # Orientation for left line taking
@@ -103,7 +98,6 @@ class CarAlgo():
                         self.suiveurLigne[3] == True:
                     self.movementQueue.clear()
                     self._start()
-                    self.evitementMEState = AvoidanceState.RECULON_VIRAGE
                     self.mainMEState = MainState.AVOIDANCE
                     self.mouvementQueued = False
 
