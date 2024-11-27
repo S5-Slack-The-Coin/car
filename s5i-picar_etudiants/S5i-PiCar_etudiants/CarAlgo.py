@@ -32,9 +32,10 @@ class CarAlgo():
         self.cmdAngle = 90
         self.movementQueue = [] ## Verifier
         self.advancing: bool = True
-        self.obstacle: bool = True
+        self.obstacle: bool = False
         self.stopTime = 1
         self.obsTimer = 0
+
         self.mainMEState = MainState.NORMAL
 
         # State system for avoidance algo
@@ -88,37 +89,37 @@ class CarAlgo():
             self._addMovement(1000, 200)
             self.mouvementQueued = True
 
-            if len(self.movementQueue) == 1: ## redo
-                if self.movementQueue[0].distance_travelled <= 170:
-                    cmd_angle = 67.5
-                elif self.movementQueue[0].distance_travelled <= 400:
-                    cmd_angle = 90
-                elif self.movementQueue[0].distance_travelled <= 580:
-                    cmd_angle = 135
-                elif self.movementQueue[0].distance_travelled <= 1000:
-                    cmd_angle = 112.5
-                    if self.suiveurLigne[1] == True or \
-                            self.suiveurLigne[2] == True or \
-                            self.suiveurLigne[3] == True:
-                        self.movementQueue.clear()
-                        self.start()
-                        self.evitementMEState = AvoidanceState.RECULON_VIRAGE
-                        self.mainMEState = MainState.AVOIDANCE
-                        self.mouvementQueued = False
+        if len(self.movementQueue) == 1:
+            if self.movementQueue[0].distance_travelled <= 170:
+                cmd_angle = 67.5
+            elif self.movementQueue[0].distance_travelled <= 400:
+                cmd_angle = 90
+            elif self.movementQueue[0].distance_travelled <= 580:
+                cmd_angle = 135
+            elif self.movementQueue[0].distance_travelled <= 1000:
+                cmd_angle = 112.5
+                if self.suiveurLigne[1] == True or \
+                        self.suiveurLigne[2] == True or \
+                        self.suiveurLigne[3] == True:
+                    self.movementQueue.clear()
+                    self._start()
+                    self.evitementMEState = AvoidanceState.RECULON_VIRAGE
+                    self.mainMEState = MainState.AVOIDANCE
+                    self.mouvementQueued = False
 
     def _retakeLine(self, delta):
         if self.isRetakeOrientationLef:
             self._acceleration(delta, -self.MAX_SPEED)
             if self.cmdSpeed < 0:
-                cmd_angle = 112.5
+                self.cmdAngle = 112.5
         else:
             self._acceleration(delta, -self.MAX_SPEED)
             if self.cmdSpeed < 0:
-                cmd_angle = 67.5
+                self.cmdAngle = 67.5
 
         if self.suiveurLigne[2] == True:
             self._start()
-        self.mainMEState = MainState.NORMAL
+            self.mainMEState = MainState.NORMAL
 
 
     def _checkEnd(self):
@@ -132,7 +133,7 @@ class CarAlgo():
     def _calculateDesicion(self, delta):
         self._move(delta, self.advancing)
         if self.distance <= 300 and self.distance != 0.0 and not self.obstacle:
-            obstacle = True
+            self.obstacle = True
             self._addMovement(self.distance - 100, self.MAX_SPEED)
             self._stop()
 
