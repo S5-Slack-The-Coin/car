@@ -32,7 +32,7 @@ class CarAlgo():
         self.MAX_ACCELERATION = 110
         self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
         self.MAX_SPEED = self.SPEED
-        self.SAFETY_FACTOR = 10
+        self.SAFETY_FACTOR = 5
         self.RETAKE_TRESHOLD = 50
         # Entree
         self.distance: float = 0
@@ -93,11 +93,11 @@ class CarAlgo():
 
     def _changeState(self, state):
         if state == MainState.BACKWARD:
-            self.currentMovement = Movement(220, -self.MAX_SPEED, True)
+            self.currentMovement = Movement(225, -self.MAX_SPEED, True)
         elif state == MainState.AVOIDANCE1:
             self.currentMovement = Movement(150, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE2:
-            self.currentMovement = Movement(260, self.MAX_SPEED)
+            self.currentMovement = Movement(330, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE3:
             self.currentMovement = Movement(250 ,self.MAX_SPEED)
         elif state == MainState.AVOIDANCE4:
