@@ -33,7 +33,7 @@ class CarAlgo():
         self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
         self.MAX_SPEED = self.SPEED
         self.SAFETY_FACTOR = 5
-        self.RETAKE_TRESHOLD = 50
+        self.RETAKE_TRESHOLD = 3 # time in seconds
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -133,11 +133,10 @@ class CarAlgo():
 
         # Count de tick a aucune ligne
         if self.suiveurLigne == [False, False, False, False, False]:
-            self.retakeCounter += 1
+            self.retakeCounter += delta
         else:
             self.retakeCounter = 0
-        # calcul de la vitesse
-        wanted_spped = 0
+
         if self.distance > 300:
             self.speed = self._acceleration(delta, self.MAX_SPEED)
         else:
@@ -160,14 +159,12 @@ class CarAlgo():
     def _avoidance3State(self, delta):
         self.angle = 130
         self._movementDone(delta)
-        if not self.currentStateDone:
-            self.currentStateDone = self.suiveurLigne[4] or self.suiveurLigne[3]
+        self.currentStateDone |= self.suiveurLigne[4] or self.suiveurLigne[3]
 
     def _avoidance4State(self, delta):
         self.angle = 85
         self._movementDone(delta)
-        # Condition de fin
-        self.currentStateDone = self.suiveurLigne[2] or self.suiveurLigne[1]
+        self.currentStateDone |= self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2] # Si un des capteurs
 
     def _retake(self, delta):
         if self.lastTurnSide == TurnSide.RIGHT:
@@ -175,7 +172,7 @@ class CarAlgo():
         else:
             self.angle = 135
         self._movementDone(delta)
-        self.currentStateDone = self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3]
+        self.currentStateDone |= self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3] # Si on détecte une des trois ligne du millieu, on rerentre dans normal
 
     def _moveDistance(self, delta: float):
         self.currentMovement.distanceTravelled += abs(self.speed) * delta

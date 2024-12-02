@@ -8,9 +8,14 @@ import Line_Follower
 
 class Control():
     def __init__(self):
-        self.angleTable = {45: 45, 60: 68, 75: 85, 90: 104, 105: 120, 120: 138, 135: 155}
+        # CONSTANTE
+        self.ANGLE_SPEED = 45  # Degres par secondes
+        # controle d'angle
         self.angle = 90
-        self.angle_max_step = 5
+        self.wanted_angle = 90
+
+
+        self.angleTable = {45: 45, 60: 68, 75: 85, 90: 104, 105: 120, 120: 138, 135: 155}
         self.speed = 0
         self.fw = front_wheels.Front_Wheels(db='config')
         self.bw = back_wheels.Back_Wheels(db='config')
@@ -76,11 +81,13 @@ class Control():
     def get_angle(self):
         return self.angle
 
-    def set_angle(self, angle):
-        if self.angle < angle:
-            self.angle += self.angle_max_step
-        elif self.angle > angle:
-            self.angle -= self.angle_max_step
+    def set_angle(self, angle, delta):
+        self.wanted_angle = angle
+
+        if self.angle < self.wanted_angle:
+            self.angle += self.ANGLE_SPEED * delta
+        elif self.angle > self.wanted_angle:
+            self.angle -= self.ANGLE_SPEED * delta
 
         if self.angle in self.angleTable:
             computedAngle = self.angleTable[self.angle]
