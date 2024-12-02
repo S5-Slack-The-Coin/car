@@ -29,11 +29,11 @@ class Movement():
 class CarAlgo():
     def __init__(self):
         # Constsants
-        self.MAX_ACCELERATION = 120
+        self.MAX_ACCELERATION = 110
         self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
         self.MAX_SPEED = self.SPEED
-        self.SAFETY_FACTOR = 10
-        self.RETAKE_TRESHOLD = 20
+        self.SAFETY_FACTOR = 5
+        self.RETAKE_TRESHOLD = 50
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -93,17 +93,17 @@ class CarAlgo():
 
     def _changeState(self, state):
         if state == MainState.BACKWARD:
-            self.currentMovement = Movement(220, -self.MAX_SPEED, True)
+            self.currentMovement = Movement(235, -self.MAX_SPEED, True)
         elif state == MainState.AVOIDANCE1:
-            self.currentMovement = Movement(150, self.MAX_SPEED)
+            self.currentMovement = Movement(160, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE2:
-            self.currentMovement = Movement(260, self.MAX_SPEED)
+            self.currentMovement = Movement(370, self.MAX_SPEED)
         elif state == MainState.AVOIDANCE3:
-            self.currentMovement = Movement(200, self.MAX_SPEED)
+            self.currentMovement = Movement(210 ,self.MAX_SPEED)
         elif state == MainState.AVOIDANCE4:
-            self.currentMovement = Movement(200, self.MAX_SPEED)
+            self.currentMovement = Movement(70, self.MAX_SPEED)
         elif state == MainState.RETAKE:
-            self.currentMovement = Movement(220, -self.MAX_SPEED, True)
+            self.currentMovement = Movement(280, -self.MAX_SPEED + 30, True)
 
         self.currentStateDone = False
         self.state = state
@@ -154,27 +154,28 @@ class CarAlgo():
         self._movementDone(delta)
 
     def _avoidance2State(self, delta):
-        self.angle = 90
+        self.angle = 98
         self._movementDone(delta)
 
     def _avoidance3State(self, delta):
-        self.angle = 135
+        self.angle = 130
         self._movementDone(delta)
-        self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
+        if not self.currentStateDone:
+            self.currentStateDone = self.suiveurLigne[4] or self.suiveurLigne[3]
 
     def _avoidance4State(self, delta):
-        self.angle = 90
+        self.angle = 85
         self._movementDone(delta)
         # Condition de fin
-        self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
+        self.currentStateDone = self.suiveurLigne[2] or self.suiveurLigne[1]
 
     def _retake(self, delta):
         if self.lastTurnSide == TurnSide.RIGHT:
-            self.angle = 135
+            self.angle = 45
         else:
-            self.angle = 65
+            self.angle = 135
         self._movementDone(delta)
-        self.currentStateDone = self.suiveurLigne == [False, False, True, False, False] or self.suiveurLigne == [False, False, True, True, False] or self.suiveurLigne == [False, True, True, False, False] or self.suiveurLigne == [False, True, True, True, False]
+        self.currentStateDone = self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3]
 
     def _moveDistance(self, delta: float):
         self.currentMovement.distanceTravelled += abs(self.speed) * delta
@@ -213,33 +214,30 @@ class CarAlgo():
     def _calculateAngle(self):
         if self.suiveurLigne == [True, False, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 50
+            return 45
         elif self.suiveurLigne == [True, True, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 56.25
+            return 55
         elif self.suiveurLigne == [False, True, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 67.5
+            return 65
         elif self.suiveurLigne == [False, True, True, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 78.75
+            return 80
         elif self.suiveurLigne == [False, False, True, False, False]:
             return 90
         elif self.suiveurLigne == [False, False, True, True, False]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 101.25
+            return 100
         elif self.suiveurLigne == [False, False, False, True, False]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 112.5
+            return 115
         elif self.suiveurLigne == [False, False, False, True, True]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 123.75
+            return 125
         elif self.suiveurLigne == [False, False, False, False, True]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 130
-        elif self.suiveurLigne == [False, False, False, False, False]:
-            self.lastTurnSide = TurnSide.RIGHT
-            return 0
+            return 135
         return self.angle
 
     def _calculateColisionSpeed(self, distance: float):
