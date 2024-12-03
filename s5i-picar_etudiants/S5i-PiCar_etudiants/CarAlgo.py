@@ -11,8 +11,12 @@ class MainState(Enum):
     AVOIDANCE2 = 5
     AVOIDANCE3 = 6
     AVOIDANCE4 = 7
-    STOP = 8
-    RETAKE = 9
+    AVOIDANCE5 = 8
+    STOP = 9
+    RETAKE1 = 10
+    RETAKE2 = 11
+    RETAKE3 = 12
+    RETAKE4 = 13
 
 class TurnSide(Enum):
     RIGHT = 1
@@ -33,7 +37,7 @@ class CarAlgo():
         self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
         self.MAX_SPEED = self.SPEED
         self.SAFETY_FACTOR = 5
-        self.RETAKE_TRESHOLD = 3 # time in seconds
+        self.RETAKE_TRESHOLD = 1.5 # time in seconds
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -47,7 +51,18 @@ class CarAlgo():
         self.retakeCounter = 0
         self.lastTurnSide = TurnSide.RIGHT
         self.currentMovement = Movement(0, 0)
+        # avoidance timer
+        self.avoidanceTimer = 0
+        self.set90 = False
 
+        self.instantAngle = False
+
+    def getInstantAngle(self):
+        if self.instantAngle:
+            self.instantAngle = False
+            return True
+        return False
+    
     def mainMETick(self, delta):
         self._stateCalculator()
         self._stateCaller(delta)
@@ -57,10 +72,8 @@ class CarAlgo():
             self.state = MainState.NORMAL
         elif self.state == MainState.NORMAL:
             if self.retakeCounter >= self.RETAKE_TRESHOLD:
-                 self._changeState(MainState.RETAKE)
-            elif self.suiveurLigne == [True, True, True, True, True] or self.suiveurLigne == [False, True, True, True,
-                                                                                            True] or self.suiveurLigne == [
-                True, True, True, True, False]:
+                 self._changeState(MainState.RETAKE1)
+            elif self.suiveurLigne == [True, True, True, True, True]:
                 self._changeState(MainState.STOP)
             elif 70 <= self.distance <= 125 and self.speed <= 35:
                 self._changeState(MainState.BACKWARD)
@@ -80,31 +93,38 @@ class CarAlgo():
         elif self.state == MainState.AVOIDANCE3:
             if self.currentStateDone:
                 self._changeState(MainState.AVOIDANCE4)
-
         elif self.state == MainState.AVOIDANCE4:
-                if self.currentStateDone:
+            if self.currentStateDone or self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2]:
+                self._changeState(MainState.AVOIDANCE5)
+        elif self.state == MainState.AVOIDANCE5:
+                if self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2]:
                     self._changeState(MainState.NORMAL)
         elif self.state == MainState.STOP:
             pass
-        elif self.state == MainState.RETAKE:
+        elif self.state == MainState.RETAKE1: # ARRETE
             if self.currentStateDone:
+                self._changeState(MainState.RETAKE2)
+        elif self.state == MainState.RETAKE2: # REVIENT
+            if self.currentStateDone or self.suiveurLigne[2]:
+                self._changeState(MainState.RETAKE3)
+        elif self.state == MainState.RETAKE3: # ARRETE
+            if self.currentStateDone:
+                self._changeState(MainState.RETAKE4)
+        elif self.state == MainState.RETAKE4: # REPRENDRE LA LIGNE DU COTE PERDU
+            if self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3] or self.suiveurLigne[4] and self.currentStateDone:
                 self._changeState(MainState.NORMAL)
-
-
+            
+                
     def _changeState(self, state):
         if state == MainState.BACKWARD:
             self.currentMovement = Movement(235, -self.MAX_SPEED, True)
-        elif state == MainState.AVOIDANCE1:
-            self.currentMovement = Movement(160, self.MAX_SPEED)
-        elif state == MainState.AVOIDANCE2:
-            self.currentMovement = Movement(370, self.MAX_SPEED)
-        elif state == MainState.AVOIDANCE3:
-            self.currentMovement = Movement(210 ,self.MAX_SPEED)
-        elif state == MainState.AVOIDANCE4:
-            self.currentMovement = Movement(70, self.MAX_SPEED)
-        elif state == MainState.RETAKE:
+            self.set90 = True
+        elif state == MainState.RETAKE2:
             self.currentMovement = Movement(280, -self.MAX_SPEED + 30, True)
+        elif state == MainState.RETAKE4:
+            self.currentMovement = Movement(280, self.MAX_SPEED + 30, True)
 
+        self.avoidanceTimer = 0
         self.currentStateDone = False
         self.state = state
 
@@ -123,10 +143,18 @@ class CarAlgo():
             self._avoidance3State(delta)
         elif self.state == MainState.AVOIDANCE4:
             self._avoidance4State(delta)
+        elif self.state == MainState.AVOIDANCE5:
+            self._avoidance5State()
         elif self.state == MainState.STOP:
             self._stopState(delta)
-        elif self.state == MainState.RETAKE:
-            self._retake(delta)
+        elif self.state == MainState.RETAKE1:
+            self._stopState(delta)
+        elif self.state == MainState.RETAKE2:
+            self._retake2(delta)
+        elif self.state == MainState.RETAKE3:
+            self._stopState(delta)
+        elif self.state == MainState.RETAKE4:
+            self._retake4(delta)
 
     def _normalState(self, delta):
         self.angle = self._calculateAngle()
@@ -147,32 +175,52 @@ class CarAlgo():
     def _backwardState(self, delta):
         self.angle = 90
         self._movementDone(delta)
-
+    # tourne a gauche
     def _avoidance1State(self, delta):
         self.angle = 55
-        self._movementDone(delta)
-
+        self.speed = self.MAX_SPEED - 40
+        self._timerFinished(delta, 2.5)
+    # tourne a droite
     def _avoidance2State(self, delta):
-        self.angle = 98
-        self._movementDone(delta)
-
+        self.angle = 125
+        self.speed = self.MAX_SPEED - 40
+        self._timerFinished(delta, 2.5)
+    # tout droit
     def _avoidance3State(self, delta):
-        self.angle = 130
-        self._movementDone(delta)
-        self.currentStateDone |= self.suiveurLigne[4] or self.suiveurLigne[3]
-
+        self.angle = 90
+        self.speed = self.MAX_SPEED - 40
+        self._timerFinished(delta, 1.8)
+    # tourne a droite
     def _avoidance4State(self, delta):
-        self.angle = 85
-        self._movementDone(delta)
-        self.currentStateDone |= self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2] # Si un des capteurs
+        self.angle = 125
+        self.speed = self.MAX_SPEED - 40
+        self._timerFinished(delta, 1.3)
+    
+    def _avoidance5State(self):
+        self.angle = 90
+        self.speed = self.MAX_SPEED - 40
 
-    def _retake(self, delta):
+    def _timerFinished(self, delta, wanted_time):
+        self.avoidanceTimer += delta
+        if self.avoidanceTimer >= wanted_time:
+            self.currentStateDone = True
+
+    def _retake2(self, delta):
         if self.lastTurnSide == TurnSide.RIGHT:
             self.angle = 45
         else:
             self.angle = 135
+        self.instantAngle = True
         self._movementDone(delta)
-        self.currentStateDone |= self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3] # Si on détecte une des trois ligne du millieu, on rerentre dans normal
+
+    def _retake4(self, delta):
+        if self.lastTurnSide == TurnSide.RIGHT:
+            self.angle = 135
+        else:
+            self.angle = 45
+        self.instantAngle = True
+        self.speed = self.MAX_SPEED - 40
+        self._timerFinished(delta, 1.4)
 
     def _moveDistance(self, delta: float):
         self.currentMovement.distanceTravelled += abs(self.speed) * delta
@@ -192,6 +240,8 @@ class CarAlgo():
 
     def _stopState(self, delta):
         self.speed = self._acceleration(delta, 0.0)
+        if -10 <= self.speed <= 10:
+            self.currentStateDone = True
 
     def _acceleration(self, delta: float, target_speed: float):
         new_speed: float = 0.0
@@ -217,18 +267,18 @@ class CarAlgo():
             return 55
         elif self.suiveurLigne == [False, True, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 65
+            return 80
         elif self.suiveurLigne == [False, True, True, False, False]:
             self.lastTurnSide = TurnSide.LEFT
-            return 80
+            return 85
         elif self.suiveurLigne == [False, False, True, False, False]:
             return 90
         elif self.suiveurLigne == [False, False, True, True, False]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 100
+            return 95
         elif self.suiveurLigne == [False, False, False, True, False]:
             self.lastTurnSide = TurnSide.RIGHT
-            return 115
+            return 100
         elif self.suiveurLigne == [False, False, False, True, True]:
             self.lastTurnSide = TurnSide.RIGHT
             return 125

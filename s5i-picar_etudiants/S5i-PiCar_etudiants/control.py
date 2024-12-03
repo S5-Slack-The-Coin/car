@@ -4,15 +4,17 @@ import time
 import picar
 from ultrasonic_module import Ultrasonic_Avoidance
 import Line_Follower
+import sys
 
 
 class Control():
     def __init__(self):
         # CONSTANTE
-        self.ANGLE_SPEED = 45  # Degres par secondes
+        self.ANGLE_SPEED = 100 # Degres par secondes
         # controle d'angle
         self.angle = 90
         self.wanted_angle = 90
+        self.MARGIN = 3
 
 
         self.angleTable = {45: 45, 60: 68, 75: 85, 90: 104, 105: 120, 120: 138, 135: 155}
@@ -23,14 +25,15 @@ class Control():
         self.bw.ready()
         self.fw.turning_max = 65
         self.set_speed(0)
-        self.set_angle(90)
+        self.set_angle(90, 1)
+        
 
         self.UA = Ultrasonic_Avoidance(20)
         self.buffer_size = 4  # Change this value to adjust filtering
         self.buffer = [0] * self.buffer_size
         self.buffer_index = 0
 
-        self.lf = Line_Follower.Line_Follower(references=[130] * 5)
+        self.lf = Line_Follower.Line_Follower(references=[90] * 5)
 
     def get_distance(self):
         current_dist = (self.UA.distance() + 4) * 10
@@ -81,14 +84,19 @@ class Control():
     def get_angle(self):
         return self.angle
 
-    def set_angle(self, angle, delta):
-        self.wanted_angle = angle
+    def set_angle(self, angle, delta, instant_angle = False):
+        if instant_angle:
+            self.angle = angle
+        else:
+            self.wanted_angle = angle
 
-        if self.angle < self.wanted_angle:
-            self.angle += self.ANGLE_SPEED * delta
-        elif self.angle > self.wanted_angle:
-            self.angle -= self.ANGLE_SPEED * delta
-
+            if self.angle + self.ANGLE_SPEED * delta < self.wanted_angle:
+                self.angle += self.ANGLE_SPEED * delta
+            elif self.angle - self.ANGLE_SPEED * delta > self.wanted_angle:
+                self.angle -= self.ANGLE_SPEED * delta
+            else:
+                self.angle = self.wanted_angle
+        
         if self.angle in self.angleTable:
             computedAngle = self.angleTable[self.angle]
         else:
@@ -137,12 +145,16 @@ class Control():
 
 if __name__ == "__main__":
     ctrl = Control()
+    print(sys.argv[1])
+    if (sys.argv[1] == "stop"):
+        ctrl.set_speed(0)
+        ctrl.set_angle(90, 1)
+        sys.exit()
     angle_test = False
     # ctrl.backward_30()
     while True:
         print(ctrl.get_line_position())
         time.sleep(0.3)
-
     while angle_test:
         print("forward")
         ctrl.set_speed(150)
@@ -157,4 +169,3 @@ if __name__ == "__main__":
             angle = 10 * i + 40
             print(f"(hard) Angle: {angle}, Computed angle: {ctrl.set_angle(angle)}")
             time.sleep(1)
-

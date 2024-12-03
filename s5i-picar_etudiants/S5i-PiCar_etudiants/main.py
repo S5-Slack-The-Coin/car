@@ -1,9 +1,13 @@
 # main.py
 import time
 
-import packet
 import control
 import CarAlgo
+
+def setwheels90(ctrl):
+    ctrl.set_angle(135, 1)
+    time.sleep(0.3)
+    ctrl.set_angle(85, 1)
 
 
 def main():
@@ -35,18 +39,21 @@ def main():
         decision.setSuiveurLigne(suiveur)
         decision.mainMETick(delta_time)
 
-        print("MainSate: ", decision.state)
+        # print("MainSate: ", decision.state)
         #print("Distance: ", distance)
         # print("AvoidanceState: ", decision.evitementMEState)
 
         speed = decision.getSpeedDecision()
         angle = decision.getSteeringDecision()
+        instantAngle = decision.getInstantAngle()
 
         # Appliquer les nouveaux controles
         ctrl.set_speed(speed)
-        ctrl.set_angle(angle)
-
-
+        if decision.set90:
+            setwheels90(ctrl)
+            decision.set90 = False
+        else:
+            ctrl.set_angle(angle, delta_time, instantAngle)
 
 if __name__ == "__main__":
     main()
