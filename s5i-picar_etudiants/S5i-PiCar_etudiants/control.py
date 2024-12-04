@@ -33,7 +33,7 @@ class Control():
         self.buffer = [0] * self.buffer_size
         self.buffer_index = 0
 
-        self.lf = Line_Follower.Line_Follower(references=[90] * 5)
+        self.lf = Line_Follower.Line_Follower(references=[190] * 5)
 
     def get_distance(self):
         current_dist = (self.UA.distance() + 4) * 10
@@ -95,7 +95,7 @@ class Control():
             elif self.angle - self.ANGLE_SPEED * delta > self.wanted_angle:
                 self.angle -= self.ANGLE_SPEED * delta
             else:
-                self.angle = self.wanted_angle
+                self.angle = angle
         
         if self.angle in self.angleTable:
             computedAngle = self.angleTable[self.angle]
@@ -145,6 +145,17 @@ class Control():
 
 if __name__ == "__main__":
     ctrl = Control()
+    start = time.time()
+    for i in range(1000):
+        ctrl.get_line_position()
+
+    end = time.time()
+
+    print((end - start)/1000)
+
+    sys.exit()
+
+
     print(sys.argv[1])
     if (sys.argv[1] == "stop"):
         ctrl.set_speed(0)

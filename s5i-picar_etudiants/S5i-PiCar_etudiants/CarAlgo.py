@@ -34,10 +34,11 @@ class CarAlgo():
     def __init__(self):
         # Constsants
         self.MAX_ACCELERATION = 110
-        self.SPEED = math.sqrt(self.MAX_ACCELERATION * 140)
+        self.SPEED = 110
         self.MAX_SPEED = self.SPEED
         self.SAFETY_FACTOR = 5
-        self.RETAKE_TRESHOLD = 1.5 # time in seconds
+        self.RETAKE_TRESHOLD = 3 # time in seconds
+        self.SPEED_AVOIDANCE = 84
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -158,6 +159,7 @@ class CarAlgo():
 
     def _normalState(self, delta):
         self.angle = self._calculateAngle()
+        self.instantAngle = False
 
         # Count de tick a aucune ligne
         if self.suiveurLigne == [False, False, False, False, False]:
@@ -178,27 +180,27 @@ class CarAlgo():
     # tourne a gauche
     def _avoidance1State(self, delta):
         self.angle = 55
-        self.speed = self.MAX_SPEED - 40
+        self.speed = self.SPEED_AVOIDANCE
         self._timerFinished(delta, 2.5)
     # tourne a droite
     def _avoidance2State(self, delta):
         self.angle = 125
-        self.speed = self.MAX_SPEED - 40
+        self.speed = self.SPEED_AVOIDANCE
         self._timerFinished(delta, 2.5)
     # tout droit
     def _avoidance3State(self, delta):
         self.angle = 90
-        self.speed = self.MAX_SPEED - 40
+        self.speed = self.SPEED_AVOIDANCE
         self._timerFinished(delta, 1.8)
     # tourne a droite
     def _avoidance4State(self, delta):
         self.angle = 125
-        self.speed = self.MAX_SPEED - 40
+        self.speed = self.SPEED_AVOIDANCE
         self._timerFinished(delta, 1.3)
     
     def _avoidance5State(self):
         self.angle = 90
-        self.speed = self.MAX_SPEED - 40
+        self.speed = self.SPEED_AVOIDANCE
 
     def _timerFinished(self, delta, wanted_time):
         self.avoidanceTimer += delta
@@ -219,7 +221,7 @@ class CarAlgo():
         else:
             self.angle = 45
         self.instantAngle = True
-        self.speed = self.MAX_SPEED - 40
+        self.speed = self.SPEED_AVOIDANCE
         self._timerFinished(delta, 1.4)
 
     def _moveDistance(self, delta: float):
