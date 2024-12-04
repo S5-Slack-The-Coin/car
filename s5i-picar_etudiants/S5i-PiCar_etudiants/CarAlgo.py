@@ -1,4 +1,5 @@
 import math
+import time
 from enum import Enum
 from xmlrpc.client import boolean
 
@@ -55,6 +56,7 @@ class CarAlgo():
         # avoidance timer
         self.avoidanceTimer = 0
         self.set90 = False
+        self.Sleeping = False
 
         self.instantAngle = False
 
@@ -120,6 +122,7 @@ class CarAlgo():
         if state == MainState.BACKWARD:
             self.currentMovement = Movement(235, -self.MAX_SPEED, True)
             self.set90 = True
+            self.Sleeping = True
         elif state == MainState.RETAKE2:
             self.currentMovement = Movement(280, -self.MAX_SPEED + 30, True)
         elif state == MainState.RETAKE4:
@@ -175,6 +178,9 @@ class CarAlgo():
             self.speed = self._acceleration(delta, wanted_speed)
 
     def _backwardState(self, delta):
+        if self.Sleeping:
+            self.Sleeping = False
+            time.sleep(2)
         self.angle = 90
         self._movementDone(delta)
     # tourne a gauche
