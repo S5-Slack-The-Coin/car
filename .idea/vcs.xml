@@ -2,5 +2,12 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+<<<<<<< Updated upstream
+=======
+    <mapping directory="$PROJECT_DIR$/s5i-picar_etudiants/S5i-PiCar_etudiants/SunFounder_PiCar" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/s5i-picar_etudiants/S5i-PiCar_etudiants/SunFounder_PiCar-S" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/s5i-picar_etudiants/S5i-PiCar_etudiants/SunFounder_PiCar-S/example/SunFounder_Light_Follower" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/s5i-picar_etudiants/S5i-PiCar_etudiants/SunFounder_PiCar-S/example/SunFounder_Line_Follower" vcs="Git" />
+>>>>>>> Stashed changes
   </component>
 </project>

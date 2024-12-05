@@ -145,6 +145,7 @@ class Control():
 
 if __name__ == "__main__":
     ctrl = Control()
+<<<<<<< Updated upstream
     start = time.time()
     for i in range(1000):
         ctrl.get_line_position()
@@ -156,6 +157,8 @@ if __name__ == "__main__":
     sys.exit()
 
 
+=======
+>>>>>>> Stashed changes
     print(sys.argv[1])
     if (sys.argv[1] == "stop"):
         ctrl.set_speed(0)

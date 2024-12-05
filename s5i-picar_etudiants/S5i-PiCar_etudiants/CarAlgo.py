@@ -35,11 +35,21 @@ class CarAlgo():
     def __init__(self):
         # Constsants
         self.MAX_ACCELERATION = 110
+<<<<<<< Updated upstream
         self.SPEED = 110
+=======
+        self.SPEED = 150
+>>>>>>> Stashed changes
         self.MAX_SPEED = self.SPEED
+        self.CURRENT_MAX_SPEED = self.MAX_SPEED
         self.SAFETY_FACTOR = 5
+<<<<<<< Updated upstream
         self.RETAKE_TRESHOLD = 3 # time in seconds
         self.SPEED_AVOIDANCE = 84
+=======
+        self.RETAKE_TRESHOLD = 2.7 # time in seconds
+        self.SPEED_AVOIDANCE = 100
+>>>>>>> Stashed changes
         # Entree
         self.distance: float = 0
         self.suiveurLigne = [False, False, False, False, False]
@@ -111,15 +121,26 @@ class CarAlgo():
             if self.currentStateDone or self.suiveurLigne[2]:
                 self._changeState(MainState.RETAKE3)
         elif self.state == MainState.RETAKE3: # ARRETE
+<<<<<<< Updated upstream
             if self.currentStateDone:
                 self._changeState(MainState.RETAKE4)
         elif self.state == MainState.RETAKE4: # REPRENDRE LA LIGNE DU COTE PERDU
             if self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3] or self.suiveurLigne[4] and self.currentStateDone:
                 self._changeState(MainState.NORMAL)
+=======
+            if self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3] or self.suiveurLigne[4] and self.currentStateDone:
+                self._changeState(MainState.NORMAL)
+            elif self.currentStateDone:
+                self._changeState(MainState.RETAKE4)
+        elif self.state == MainState.RETAKE4: # REPRENDRE LA LIGNE DU COTE PERDU
+            if self.suiveurLigne[0] or self.suiveurLigne[1] or self.suiveurLigne[2] or self.suiveurLigne[3] or self.suiveurLigne[4] and self.currentStateDone:
+                self._changeState(MainState.NORMAL)
+>>>>>>> Stashed changes
             
                 
     def _changeState(self, state):
         if state == MainState.BACKWARD:
+<<<<<<< Updated upstream
             self.currentMovement = Movement(235, -self.MAX_SPEED, True)
             self.set90 = True
             self.Sleeping = True
@@ -127,6 +148,15 @@ class CarAlgo():
             self.currentMovement = Movement(280, -self.MAX_SPEED + 30, True)
         elif state == MainState.RETAKE4:
             self.currentMovement = Movement(280, self.MAX_SPEED + 30, True)
+=======
+            self.currentMovement = Movement(235, -self.MAX_SPEED*0.7, True)
+            self.set90 = True
+            self.Sleeping = True
+        elif state == MainState.RETAKE2:
+            self.currentMovement = Movement(280, -self.MAX_SPEED*0.65, True)
+        elif state == MainState.RETAKE4:
+            self.currentMovement = Movement(280, self.MAX_SPEED*0.65, True)
+>>>>>>> Stashed changes
 
         self.avoidanceTimer = 0
         self.currentStateDone = False
@@ -171,7 +201,7 @@ class CarAlgo():
             self.retakeCounter = 0
 
         if self.distance > 300:
-            self.speed = self._acceleration(delta, self.MAX_SPEED)
+            self.speed = self._acceleration(delta, self.CURRENT_MAX_SPEED)
         else:
             wanted_speed = self._calculateColisionSpeed(self.distance)
             #print("caluclated speed", wanted_speed)
@@ -179,30 +209,59 @@ class CarAlgo():
 
     def _backwardState(self, delta):
         if self.Sleeping:
+<<<<<<< Updated upstream
             self.Sleeping = False
             time.sleep(2)
         self.angle = 90
         self._movementDone(delta)
+=======
+            self._wait(delta, 2)
+        self.angle = 90
+        self._movementDone(delta)
+    # wait
+    def _wait(self, delta, wanted_time):
+        self.avoidanceTimer += delta
+        if self.avoidanceTimer >= wanted_time:
+            self.Sleeping = False
+        
+>>>>>>> Stashed changes
     # tourne a gauche
     def _avoidance1State(self, delta):
         self.angle = 55
         self.speed = self.SPEED_AVOIDANCE
+<<<<<<< Updated upstream
         self._timerFinished(delta, 2.5)
+=======
+        self._timerFinished(delta, 2.2)
+>>>>>>> Stashed changes
     # tourne a droite
     def _avoidance2State(self, delta):
         self.angle = 125
         self.speed = self.SPEED_AVOIDANCE
+<<<<<<< Updated upstream
         self._timerFinished(delta, 2.5)
+=======
+        self._timerFinished(delta, 2.2)
+>>>>>>> Stashed changes
     # tout droit
     def _avoidance3State(self, delta):
         self.angle = 90
         self.speed = self.SPEED_AVOIDANCE
+<<<<<<< Updated upstream
         self._timerFinished(delta, 1.8)
     # tourne a droite
     def _avoidance4State(self, delta):
         self.angle = 125
         self.speed = self.SPEED_AVOIDANCE
         self._timerFinished(delta, 1.3)
+=======
+        self._timerFinished(delta, 1.5)
+    # tourne a droite
+    def _avoidance4State(self, delta):
+        self.angle = 135
+        self.speed = self.SPEED_AVOIDANCE
+        self._timerFinished(delta, 1.5)
+>>>>>>> Stashed changes
     
     def _avoidance5State(self):
         self.angle = 90
@@ -269,29 +328,52 @@ class CarAlgo():
     def _calculateAngle(self):
         if self.suiveurLigne == [True, False, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED*0.85
             return 45
         elif self.suiveurLigne == [True, True, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED*0.9
             return 55
         elif self.suiveurLigne == [False, True, False, False, False]:
             self.lastTurnSide = TurnSide.LEFT
+<<<<<<< Updated upstream
             return 80
         elif self.suiveurLigne == [False, True, True, False, False]:
             self.lastTurnSide = TurnSide.LEFT
             return 85
+=======
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED
+            return 75
+        elif self.suiveurLigne == [False, True, True, False, False]:
+            self.lastTurnSide = TurnSide.LEFT
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED
+            return 82.5
+>>>>>>> Stashed changes
         elif self.suiveurLigne == [False, False, True, False, False]:
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED
             return 90
         elif self.suiveurLigne == [False, False, True, True, False]:
             self.lastTurnSide = TurnSide.RIGHT
+<<<<<<< Updated upstream
             return 95
         elif self.suiveurLigne == [False, False, False, True, False]:
             self.lastTurnSide = TurnSide.RIGHT
             return 100
+=======
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED
+            return 97.5
+        elif self.suiveurLigne == [False, False, False, True, False]:
+            self.lastTurnSide = TurnSide.RIGHT
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED
+            return 105
+>>>>>>> Stashed changes
         elif self.suiveurLigne == [False, False, False, True, True]:
             self.lastTurnSide = TurnSide.RIGHT
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED*0.9
             return 125
         elif self.suiveurLigne == [False, False, False, False, True]:
             self.lastTurnSide = TurnSide.RIGHT
+            self.CURRENT_MAX_SPEED = self.MAX_SPEED*0.85
             return 135
         return self.angle
 
